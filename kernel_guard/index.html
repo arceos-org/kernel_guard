@@ -1,0 +1,49 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="RAII wrappers to create a critical section with local IRQs or preemption disabled, used to implement spin locks in kernel."><title>kernel_guard - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="kernel_guard" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (48a426eca 2025-01-12)" data-channel="nightly" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../static.files/storage-59e33391.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../kernel_guard/index.html">kernel_<wbr>guard</a><span class="version">0.1.2</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#crate-features" title="Crate features">Crate features</a></li><li><a href="#examples" title="Examples">Examples</a></li></ul><h3><a href="#structs">Crate Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#traits" title="Traits">Traits</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>kernel_guard</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/kernel_guard/lib.rs.html#1-238">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>RAII wrappers to create a critical section with local IRQs or preemption
+disabled, used to implement spin locks in kernel.</p>
+<p>The critical section is created after the guard struct is created, and is
+ended when the guard falls out of scope.</p>
+<p>The crate user must implement the <a href="trait.KernelGuardIf.html" title="trait kernel_guard::KernelGuardIf"><code>KernelGuardIf</code></a> trait using
+[<code>crate_interface::impl_interface</code>] to provide the low-level implementantion
+of how to enable/disable kernel preemption, if the feature <code>preempt</code> is
+enabled.</p>
+<p>Available guards:</p>
+<ul>
+<li><a href="struct.NoOp.html" title="struct kernel_guard::NoOp"><code>NoOp</code></a>: Does nothing around the critical section.</li>
+<li><a href="struct.IrqSave.html" title="struct kernel_guard::IrqSave"><code>IrqSave</code></a>: Disables/enables local IRQs around the critical section.</li>
+<li><a href="struct.NoPreempt.html" title="struct kernel_guard::NoPreempt"><code>NoPreempt</code></a>: Disables/enables kernel preemption around the critical
+section.</li>
+<li><a href="struct.NoPreemptIrqSave.html" title="struct kernel_guard::NoPreemptIrqSave"><code>NoPreemptIrqSave</code></a>: Disables/enables both kernel preemption and local
+IRQs around the critical section.</li>
+</ul>
+<h2 id="crate-features"><a class="doc-anchor" href="#crate-features">§</a>Crate features</h2>
+<ul>
+<li><code>preempt</code>: Use in the preemptive system. If this feature is enabled, you
+need to implement the <a href="trait.KernelGuardIf.html" title="trait kernel_guard::KernelGuardIf"><code>KernelGuardIf</code></a> trait in other crates. Otherwise
+the preemption enable/disable operations will be no-ops. This feature is
+disabled by default.</li>
+</ul>
+<h2 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>kernel_guard::{KernelGuardIf, NoPreempt};
+
+<span class="kw">struct </span>KernelGuardIfImpl;
+
+<span class="attr">#[crate_interface::impl_interface]
+</span><span class="kw">impl </span>KernelGuardIf <span class="kw">for </span>KernelGuardIfImpl {
+    <span class="kw">fn </span>enable_preempt() {
+        <span class="comment">// Your implementation here
+    </span>}
+    <span class="kw">fn </span>disable_preempt() {
+        <span class="comment">// Your implementation here
+    </span>}
+}
+
+<span class="kw">let </span>guard = NoPreempt::new();
+<span class="comment">/* The critical section starts here
+
+Do something that requires preemption to be disabled
+
+The critical section ends here */
+</span>drop(guard);</code></pre></div>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.IrqSave.html" title="struct kernel_guard::IrqSave">IrqSave</a></div><div class="desc docblock-short">A guard that disables/enables local IRQs around the critical section.</div></li><li><div class="item-name"><a class="struct" href="struct.NoOp.html" title="struct kernel_guard::NoOp">NoOp</a></div><div class="desc docblock-short">A no-op guard that does nothing around the critical section.</div></li><li><div class="item-name"><a class="struct" href="struct.NoPreempt.html" title="struct kernel_guard::NoPreempt">NoPreempt</a></div><div class="desc docblock-short">A guard that disables/enables kernel preemption around the critical
+section.</div></li><li><div class="item-name"><a class="struct" href="struct.NoPreemptIrqSave.html" title="struct kernel_guard::NoPreemptIrqSave">NoPreempt<wbr>IrqSave</a></div><div class="desc docblock-short">A guard that disables/enables both kernel preemption and local IRQs
+around the critical section.</div></li></ul><h2 id="traits" class="section-header">Traits<a href="#traits" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="trait" href="trait.BaseGuard.html" title="trait kernel_guard::BaseGuard">Base<wbr>Guard</a></div><div class="desc docblock-short">A base trait that all guards implement.</div></li><li><div class="item-name"><a class="trait" href="trait.KernelGuardIf.html" title="trait kernel_guard::KernelGuardIf">Kernel<wbr>Guard<wbr>If</a></div><div class="desc docblock-short">Low-level interfaces that must be implemented by the crate user.</div></li></ul></section></div></main></body></html>
