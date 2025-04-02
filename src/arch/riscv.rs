@@ -7,7 +7,9 @@ const SIE_BIT: usize = 1 << 1;
 pub fn local_irq_save_and_disable() -> usize {
     let flags: usize;
     // clear the `SIE` bit, and return the old CSR
-    unsafe { asm!("csrrc {}, sstatus, {}", out(reg) flags, const SIE_BIT) };
+    unsafe {
+        asm!("csrrc {}, sstatus, {}", out(reg) flags, in(reg) SIE_BIT);
+    }
     flags & SIE_BIT
 }
 
